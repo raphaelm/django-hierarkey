@@ -38,6 +38,7 @@ setup(
 
     keywords='strings database models keyvalue',
     install_requires=[
+        'python-dateutil'
     ],
 
     packages=find_packages(exclude=['tests', 'tests.*', 'demoproject', 'demoproject.*']),

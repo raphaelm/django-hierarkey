@@ -7,3 +7,5 @@ sphinx
 sphinx-autobuild
 isort
 flake8
+python-dateutil
+django-extensions
