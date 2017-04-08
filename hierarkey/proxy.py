@@ -9,14 +9,14 @@ from django.core.files.storage import default_storage
 from django.db.models import Model
 from typing import Any, Dict, Optional
 
-
-DEFAULTS = {}
+from hierarkey.models import Hierarkey
 
 
 class HierarkeyProxy:
-    def __init__(self, obj: Model, attribute_name: str, cache_namespace: str, parent: Optional[Model] = None, type=None):
+    def __init__(self, obj: Model, hierarkey: Hierarkey, cache_namespace: str, parent: Optional[Model] = None,
+                 type: type=None):
         self._obj = obj
-        self._attr_name = attribute_name
+        self._h = hierarkey
         self._cache_namespace = cache_namespace
         self._parent = parent
         self._cached_obj = None
@@ -25,7 +25,7 @@ class HierarkeyProxy:
 
     @property
     def _objects(self):
-        return getattr(self._obj, '_%s_objects' % self._attr_name)
+        return getattr(self._obj, '_%s_objects' % self._h.attribute_name)
 
     def _cache(self) -> Dict[str, Any]:
         if self._cached_obj is None:
@@ -57,10 +57,10 @@ class HierarkeyProxy:
         any default values of its parents or hardcoded in pretix.
         """
         settings = {}
-        for key, v in DEFAULTS.items():
-            settings[key] = self._unserialize(v['default'], v['type'])
+        for key, v in self._h.defaults.items():
+            settings[key] = self._unserialize(v.value, v.type)
         if self._parent:
-            settings.update(getattr(self._parent, self._attr_name).freeze())
+            settings.update(getattr(self._parent, self._h.attribute_name).freeze())
         for key in self._cache():
             settings[key] = self.get(key)
         return settings
@@ -125,17 +125,17 @@ class HierarkeyProxy:
         value hardcoded will be returned if one exists. If not, the value of the ``default`` argument
         will be returned instead.
         """
-        if as_type is None and key in DEFAULTS:
-            as_type = DEFAULTS[key]['type']
+        if as_type is None and key in self._h.defaults:
+            as_type = self._h.defaults[key].type
 
         if key in self._cache():
             value = self._cache()[key]
         else:
             value = None
             if self._parent:
-                value = getattr(self._parent, self._attr_name).get(key, as_type=str)
-            if value is None and key in DEFAULTS:
-                value = DEFAULTS[key]['default']
+                value = getattr(self._parent, self._h.attribute_name).get(key, as_type=str)
+            if value is None and key in self._h.defaults:
+                value = self._h.defaults[key].value
             if value is None and default is not None:
                 value = default
 
@@ -146,7 +146,7 @@ class HierarkeyProxy:
 
     def __getattr__(self, key: str) -> Any:
         if key.startswith('_'):
-            return super().__getattr__(key)
+            return super().__getattribute__(key)
         return self.get(key)
 
     def __setattr__(self, key: str, value: Any) -> None:

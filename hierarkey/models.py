@@ -1,8 +1,12 @@
 import sys
+from collections import namedtuple
+from typing import Any
+
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
 
-class BaseHierarkeyModel(models.Model):
+class BaseHierarkeyStoreModel(models.Model):
     key = models.CharField(max_length=255, primary_key=True)
     value = models.TextField()
 
@@ -10,50 +14,105 @@ class BaseHierarkeyModel(models.Model):
         abstract = True
 
 
-def add_hierarkey_store(attribute_name='hkstore', cache_namespace=None, parent_field=None):
-    def wrapper(model):
-        _cache_namespace = cache_namespace or ('%s_%s' % (model.__name__, attribute_name))
+HierarkeyDefault = namedtuple('HierarkeyDefault', ['value', 'type'])
 
+
+class Hierarkey:
+    def __init__(self, attribute_name):
+        self.attribute_name = attribute_name
+        self.global_class = None
+        self.defaults = {}
+
+    def _create_attrs(self, base_model: type) -> dict:
         class Meta:
             pass
 
         attrs = {
             'Meta': Meta,
-            'object': models.ForeignKey(model, related_name='_%s_objects' % attribute_name, on_delete=models.CASCADE),
-            '__module__': model.__module__,
+            '__module__': base_model.__module__,
         }
+        return attrs
 
-        model_name = '%s_%sStore' % (model.__name__, attribute_name.title())
-        kv_model = models.base.ModelBase(model_name, (BaseHierarkeyModel,), attrs)
+    def _create_model(self, model_name: str, attrs: dict) -> type:
+        return models.base.ModelBase(model_name, (BaseHierarkeyStoreModel,), attrs)
 
-        setattr(sys.modules[model.__module__], model_name, kv_model)
-        setattr(model, '_%s_parent_field' % attribute_name, parent_field)
-        setattr(model, '_%s_cache_namespace' % attribute_name, _cache_namespace)
+    def add_default(self, key: str, value: Any, default_type: type=str) -> None:
+        self.defaults[key] = HierarkeyDefault(value, default_type)
 
-        def prop(self):
-            from .proxy import HierarkeyProxy
+    def add_global(self, cache_namespace: str=None) -> type:
+        def wrapper(wrapped_class):
+            if issubclass(wrapped_class, models.Model):
+                raise ImproperlyConfigured('Hierarkey.add_global() can only be invoked on a normal class, '
+                                           'not on a Django model.')
 
-            try:
+            _cache_namespace = cache_namespace or ('%s_%s' % (wrapped_class.__name__, self.attribute_name))
+
+            attrs = self._create_attrs(wrapped_class)
+            model_name = '%s_%sStore' % (wrapped_class.__name__, self.attribute_name.title())
+            kv_model = self._create_model(model_name, attrs)
+            hierarkey = self
+
+            def prop(self):
+                from .proxy import HierarkeyProxy
+
                 return HierarkeyProxy(self,
                                       type=kv_model,
-                                      parent=getattr(self, parent_field) if parent_field else None,
-                                      cache_namespace=cache_namespace,
-                                      attribute_name=attribute_name)
-            except models.ObjectDoesNotExist:
-                # Should only happen when creating new events
+                                      hierarkey=hierarkey,
+                                      cache_namespace=_cache_namespace)
+
+            setattr(sys.modules[wrapped_class.__module__], model_name, kv_model)
+            setattr(wrapped_class, '_%s_objects' % self.attribute_name, kv_model.objects)
+            setattr(wrapped_class, self.attribute_name, property(prop))
+            self.global_class = wrapped_class
+            return wrapped_class
+
+        return wrapper
+
+    def add(self, cache_namespace: str=None, parent_field: str=None) -> type:
+        def wrapper(model):
+            if not issubclass(model, models.Model):
+                raise ImproperlyConfigured('Hierarkey.add() can only be invoked on a Django model')
+
+            _cache_namespace = cache_namespace or ('%s_%s' % (model.__name__, self.attribute_name))
+
+            attrs = self._create_attrs(model)
+            attrs['object'] = models.ForeignKey(model, related_name='_%s_objects' % self.attribute_name,
+                                                on_delete=models.CASCADE)
+            model_name = '%s_%sStore' % (model.__name__, self.attribute_name.title())
+            kv_model = self._create_model(model_name, attrs)
+
+            setattr(sys.modules[model.__module__], model_name, kv_model)
+
+            hierarkey = self
+
+            def prop(self):
+                from .proxy import HierarkeyProxy
+
+                try:
+                    parent = getattr(self, parent_field) if parent_field else None
+                except models.ObjectDoesNotExist:
+                    parent = None
+
+                if not parent and hierarkey.global_class:
+                    parent = hierarkey.global_class()
+
                 return HierarkeyProxy(self,
                                       type=kv_model,
-                                      cache_namespace=cache_namespace,
-                                      attribute_name=attribute_name)
+                                      hierarkey=hierarkey,
+                                      parent=parent,
+                                      cache_namespace=_cache_namespace)
 
-        setattr(model, attribute_name, property(prop))
+            setattr(model, self.attribute_name, property(prop))
 
-        return model
+            return model
 
-    return wrapper
+        return wrapper
 
 
-class GlobalHierarkeyStore(BaseHierarkeyModel):
-
+class GlobalHierarkeyStore(BaseHierarkeyStoreModel):
     def __init__(self, *args, object=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class GlobalSettingsBase:
+    pass
