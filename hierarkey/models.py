@@ -1,9 +1,10 @@
 import sys
 from collections import namedtuple
-from typing import Any, Callable
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.utils.functional import cached_property
+from typing import Any, Callable, Optional
 
 
 class BaseHierarkeyStoreModel(models.Model):
@@ -19,6 +20,14 @@ HierarkeyType = namedtuple('HierarkeyType', ['type', 'serialize', 'unserialize']
 
 
 class Hierarkey:
+    """
+    The Hierarkey object represents one complete key-value store hierarchy. It can have one global and multiple
+    object-level storages attached and holds default values as well as custom type serialization info.
+    
+    :param attribute_name: The name for the attribute on the model instances that will allow access to the 
+                           storage, e.g. ``settings``.
+    """
+
     def __init__(self, attribute_name):
         self.attribute_name = attribute_name
         self.global_class = None
@@ -38,17 +47,46 @@ class Hierarkey:
     def _create_model(self, model_name: str, attrs: dict) -> type:
         return models.base.ModelBase(model_name, (BaseHierarkeyStoreModel,), attrs)
 
-    def add_default(self, key: str, value: Any, default_type: type=str) -> None:
+    def add_default(self, key: str, value: Optional[str], default_type: type = str) -> None:
+        """
+        Adds a default value and a default type for a key.
+        
+        :param key: Key 
+        :param value: *Serialized* default value, i.e. a string or ``None``.
+        :param default_type: The type to unserialize values for this key to, defaults to ``str``.
+        """
         self.defaults[key] = HierarkeyDefault(value, default_type)
 
-    def add_type(self, type: type, serialize: Callable, unserialize: Callable) -> None:
+    def add_type(self, type: type, serialize: Callable[[Any], str], unserialize: Callable[[str], Any]) -> None:
+        """
+        Adds serialization support for a new type.
+        
+        :param type: The type to add support for.
+        :param serialize: A callable that takes an object of type ``type`` and returns a string.
+        :param unserialize: A callable that takes a string and returns an object of type ``type``.
+        """
         self.types.append(HierarkeyType(type=type, serialize=serialize, unserialize=unserialize))
 
-    def add_global(self, cache_namespace: str=None) -> type:
+    def set_global(self, cache_namespace: str = None) -> type:
+        """
+        Decorator. Attaches the global key-value store of this hierarchy to an object.
+        
+        :param cache_namespace: Optional. A custom namespace used for caching. By default this is 
+                                constructed from the name of the class this is applied to and
+                                the ``attribute_name`` of this ``Hierarkey`` object.
+        """
+
+        if isinstance(cache_namespace, type):
+            raise ImproperlyConfigured('Incorrect decorator usage, you need to use .add_global() '
+                                       'instead of .add_global')
+
         def wrapper(wrapped_class):
             if issubclass(wrapped_class, models.Model):
                 raise ImproperlyConfigured('Hierarkey.add_global() can only be invoked on a normal class, '
                                            'not on a Django model.')
+            if not issubclass(wrapped_class, GlobalSettingsBase):
+                raise ImproperlyConfigured('You should use .add_global() on a class that inherits from '
+                                           'GlobalSettingsBase.')
 
             _cache_namespace = cache_namespace or ('%s_%s' % (wrapped_class.__name__, self.attribute_name))
 
@@ -67,20 +105,32 @@ class Hierarkey:
             def prop(self):
                 from .proxy import HierarkeyProxy
 
-                return HierarkeyProxy(self,
-                                      type=kv_model,
-                                      hierarkey=hierarkey,
-                                      cache_namespace=_cache_namespace)
+                return HierarkeyProxy.new(self,
+                                          type=kv_model,
+                                          hierarkey=hierarkey,
+                                          cache_namespace=_cache_namespace)
 
             setattr(sys.modules[wrapped_class.__module__], model_name, kv_model)
             setattr(wrapped_class, '_%s_objects' % self.attribute_name, kv_model.objects)
-            setattr(wrapped_class, self.attribute_name, property(prop))
+            setattr(wrapped_class, self.attribute_name, cached_property(prop))
             self.global_class = wrapped_class
             return wrapped_class
 
         return wrapper
 
-    def add(self, cache_namespace: str=None, parent_field: str=None) -> type:
+    def add(self, cache_namespace: str = None, parent_field: str = None) -> type:
+        """
+        Decorator. Attaches a global key-value store to a Django model.
+        
+        :param cache_namespace: Optional. A custom namespace used for caching. By default this is 
+                                constructed from the name of the class this is applied to and
+                                the ``attribute_name`` of this ``Hierarkey`` object.
+        :param parent_field: Optional. The name of a field of this model that refers to the parent
+                             in the hierarchy. This must be a ``ForeignKey`` field.
+        """
+        if isinstance(cache_namespace, type):
+            raise ImproperlyConfigured('Incorrect decorator usage, you need to use .add() instead of .add')
+
         def wrapper(model):
             if not issubclass(model, models.Model):
                 raise ImproperlyConfigured('Hierarkey.add() can only be invoked on a Django model')
@@ -108,13 +158,13 @@ class Hierarkey:
                 if not parent and hierarkey.global_class:
                     parent = hierarkey.global_class()
 
-                return HierarkeyProxy(self,
-                                      type=kv_model,
-                                      hierarkey=hierarkey,
-                                      parent=parent,
-                                      cache_namespace=_cache_namespace)
+                return HierarkeyProxy.new(self,
+                                          type=kv_model,
+                                          hierarkey=hierarkey,
+                                          parent=parent,
+                                          cache_namespace=_cache_namespace)
 
-            setattr(model, self.attribute_name, property(prop))
+            setattr(model, self.attribute_name, cached_property(prop))
 
             return model
 
@@ -122,4 +172,10 @@ class Hierarkey:
 
 
 class GlobalSettingsBase:
+    """
+    Base class for objects with a global settings storage attached. This class does not
+    add any functionality, it only makes global settings behave more consistent to
+    object-level settings.
+    """
+
     pk = '_global'

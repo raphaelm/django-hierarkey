@@ -19,12 +19,13 @@ Documentation content
 ---------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    concept
    quickstart
    api
    forms
+   exttype
 
 .. _pretix: https://github.com/pretix/pretix
 .. _django: https://www.djangoproject.com/

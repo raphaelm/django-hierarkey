@@ -6,7 +6,7 @@ from hierarkey.models import GlobalSettingsBase, Hierarkey
 hierarkey = Hierarkey(attribute_name='settings')
 
 
-@hierarkey.add_global(cache_namespace='global')
+@hierarkey.set_global(cache_namespace='global')
 class GlobalSettings(GlobalSettingsBase):
     pass
 

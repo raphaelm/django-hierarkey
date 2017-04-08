@@ -1,0 +1,7 @@
+@startuml
+
+Default <|- Global
+Global <|- Organization
+Organization <|- User
+
+@enduml

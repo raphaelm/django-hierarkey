@@ -13,18 +13,33 @@ from hierarkey.models import Hierarkey
 
 
 class HierarkeyProxy:
-    def __init__(self, obj: Model, hierarkey: Hierarkey, cache_namespace: str, parent: Optional[Model] = None,
-                 type: type=None):
-        self._obj = obj
-        self._h = hierarkey
-        self._cache_namespace = cache_namespace
-        self._parent = parent
-        self._cached_obj = None
-        self._write_cached_obj = None
-        self._type = type
+    """
+    If you add a hierarkey storage to a model, the model will get a new attribute (e.g. ``settings``) containing
+    a key-value store that is managed by this class.
+    
+    This class allows access to settings via attribute access, item access or using the documented methods.    
+    You should not instantiate this class yourself.
+    """
+
+    @classmethod
+    def _new(cls, obj: Model, hierarkey: Hierarkey, cache_namespace: str, parent: Optional[Model] = None,
+             type: type=None):
+        o = HierarkeyProxy()
+        o._obj = obj
+        o._h = hierarkey
+        o._cache_namespace = cache_namespace
+        o._parent = parent
+        o._cached_obj = None
+        o._write_cached_obj = None
+        o._type = type
+        return o
 
     @property
     def _objects(self):
+        """
+        Returns a model manager (or related object manager) giving access to the raw objects backing this
+        storage level.
+        """
         return getattr(self._obj, '_%s_objects' % self._h.attribute_name)
 
     def _cache(self) -> Dict[str, Any]:
@@ -43,7 +58,10 @@ class HierarkeyProxy:
             }
         return self._write_cached_obj
 
-    def _flush(self) -> None:
+    def flush(self) -> None:
+        """
+        Discards both the state within this object as well as the cache in Django's cache backend.
+        """
         self._cached_obj = None
         self._write_cached_obj = None
         self._flush_external_cache()
@@ -54,7 +72,7 @@ class HierarkeyProxy:
     def freeze(self) -> dict:
         """
         Returns a dictionary of all settings set for this object, including
-        any default values of its parents or hardcoded in pretix.
+        any values of its parents or hardcoded defaults.
         """
         settings = {}
         for key, v in self._h.defaults.items():
@@ -127,13 +145,13 @@ class HierarkeyProxy:
         """
         Get a setting specified by key ``key``. Normally, settings are strings, but
         if you put non-strings into the settings object, you can request unserialization
-        by specifying ``as_type``. If the key does not have a harcdoded type in the pretix source,
+        by specifying ``as_type``. If the key does not have a harcdoded default type,
         omitting ``as_type`` always will get you a string.
 
         If the setting with the specified name does not exist on this object, any parent object
-        will be queried (e.g. the organizer of an event). If still no value is found, a default
-        value hardcoded will be returned if one exists. If not, the value of the ``default`` argument
-        will be returned instead.
+        up to the global settings layer (if configured) will be queried. If still no value is 
+        found, a default value set in ths source code will be returned if one exists. 
+        If not, the value of the ``default`` argument of this method will be returned instead.
         """
         if as_type is None and key in self._h.defaults:
             as_type = self._h.defaults[key].type
@@ -169,7 +187,10 @@ class HierarkeyProxy:
 
     def set(self, key: str, value: Any) -> None:
         """
-        Stores a setting to the database of its object.
+        Stores a setting to the database of its object. 
+        
+        The write to the database is performed immediately and the cache in the cache backend is flushed.
+        The cache within this object will be updated correctly.
         """
         wc = self._write_cache()
         if key in wc:
@@ -193,6 +214,9 @@ class HierarkeyProxy:
     def delete(self, key: str) -> None:
         """
         Deletes a setting from this object's storage.
+        
+        The write to the database is performed immediately and the cache in the cache backend is flushed.
+        The cache within this object will be updated correctly.
         """
         if key in self._write_cache():
             self._write_cache()[key].delete()
