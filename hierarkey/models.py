@@ -1,6 +1,6 @@
 import sys
 from collections import namedtuple
-from typing import Any
+from typing import Any, Callable
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -15,6 +15,7 @@ class BaseHierarkeyStoreModel(models.Model):
 
 
 HierarkeyDefault = namedtuple('HierarkeyDefault', ['value', 'type'])
+HierarkeyType = namedtuple('HierarkeyType', ['type', 'serialize', 'unserialize'])
 
 
 class Hierarkey:
@@ -22,6 +23,7 @@ class Hierarkey:
         self.attribute_name = attribute_name
         self.global_class = None
         self.defaults = {}
+        self.types = []
 
     def _create_attrs(self, base_model: type) -> dict:
         class Meta:
@@ -38,6 +40,9 @@ class Hierarkey:
 
     def add_default(self, key: str, value: Any, default_type: type=str) -> None:
         self.defaults[key] = HierarkeyDefault(value, default_type)
+
+    def add_type(self, type: type, serialize: Callable, unserialize: Callable) -> None:
+        self.types.append(HierarkeyType(type=type, serialize=serialize, unserialize=unserialize))
 
     def add_global(self, cache_namespace: str=None) -> type:
         def wrapper(wrapped_class):

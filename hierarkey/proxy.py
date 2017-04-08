@@ -92,8 +92,14 @@ class HierarkeyProxy:
             return dateutil.parser.parse(value).date()
         elif as_type == time:
             return dateutil.parser.parse(value).time()
-        elif as_type is not None and issubclass(as_type, Model):
+        elif as_type is not None:
+            for t in self._h.types:
+                if issubclass(as_type, t.type):
+                    return t.unserialize(value)
+
+        if as_type is not None and issubclass(as_type, Model):
             return as_type.objects.get(pk=value)
+
         return value
 
     def _serialize(self, value: Any) -> str:
@@ -110,6 +116,10 @@ class HierarkeyProxy:
             return value.pk
         elif isinstance(value, File):
             return 'file://' + value.name
+        else:
+            for t in self._h.types:
+                if isinstance(value, t.type):
+                    return t.serialize(value)
 
         raise TypeError('Unable to serialize %s into a setting.' % str(type(value)))
 

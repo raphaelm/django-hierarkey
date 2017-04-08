@@ -12,6 +12,14 @@ from hierarkey.models import HierarkeyDefault
 from .testapp.models import GlobalSettings, Organization, User, hierarkey
 
 
+class MyType:
+    def __init__(self, foo):
+        self.foo = foo
+
+    def __eq__(self, other):
+        return self.foo == other.foo
+
+
 class SettingsTestCase(TestCase):
     def setUp(self):
         hierarkey.add_default('test_default', 'def', str)
@@ -183,11 +191,20 @@ class SettingsTestCase(TestCase):
         self.user.settings._flush()
         self.assertIs(self.user.settings.get('test', as_type=None), False)
 
-    def test_serialize_versionable(self):
+    def test_serialize_model(self):
         self._test_serialization(self.user, User)
 
-    def test_serialize_model(self):
-        self._test_serialization(User.objects.create(name='dummy@dummy.dummy', organization=self.organization), User)
+    def test_serialize_custom_type(self):
+        hierarkey.add_type(MyType, lambda v: v.foo, lambda v: MyType(v))
+        self._test_serialization(MyType('bar'), MyType)
+
+    def test_custom_type_default(self):
+        hierarkey.add_type(MyType, lambda v: v.foo, lambda v: MyType(v))
+        hierarkey.add_default('mytype_foo', 'bar', MyType)
+        self.assertEqual(self.user.settings.get('mytype_foo'), MyType('bar'))
+        self.user.settings.set('mytype_foo', MyType('baz'))
+        self.user.settings._flush()
+        self.assertEqual(self.user.settings.get('mytype_foo'), MyType('baz'))
 
     def test_serialize_unknown(self):
         class Type:
