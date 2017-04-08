@@ -130,7 +130,7 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'description': 'Simple multi-language data in Django',
+    'description': 'Hierarchical key-value store for Django',
     'github_user': 'raphaelm',
     'github_repo': 'django-hierarkey',
     'github_button': True,
