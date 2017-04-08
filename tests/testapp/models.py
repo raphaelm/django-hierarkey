@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from hierarkey.models import Hierarkey, GlobalSettingsBase
+from hierarkey.models import GlobalSettingsBase, Hierarkey
 
 hierarkey = Hierarkey(attribute_name='settings')
 

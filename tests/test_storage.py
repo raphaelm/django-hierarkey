@@ -1,4 +1,4 @@
-from datetime import datetime, time, date
+from datetime import date, datetime, time
 from decimal import Decimal
 
 from django.core.files import File
@@ -8,7 +8,8 @@ from django.test import TestCase
 from django.utils.timezone import now
 
 from hierarkey.models import HierarkeyDefault
-from .testapp.models import hierarkey, GlobalSettings, Organization, User
+
+from .testapp.models import GlobalSettings, Organization, User, hierarkey
 
 
 class SettingsTestCase(TestCase):

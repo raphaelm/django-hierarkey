@@ -1,13 +1,13 @@
 import decimal
 import json
 from datetime import date, datetime, time
+from typing import Any, Dict, Optional
 
 import dateutil.parser
 from django.core.cache import cache
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db.models import Model
-from typing import Any, Dict, Optional
 
 from hierarkey.models import Hierarkey
 
