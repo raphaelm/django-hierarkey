@@ -21,6 +21,4 @@ matrix:
     - python: 3.6
       env: TOXENV=coverage
     - python: 3.6
-      env: TOXENV=doctest
-    - python: 3.6
       env: TOXENV=style
