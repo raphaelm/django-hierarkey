@@ -8,7 +8,7 @@ from typing import Any, Callable, Optional
 
 
 class BaseHierarkeyStoreModel(models.Model):
-    key = models.CharField(max_length=255, primary_key=True)
+    key = models.CharField(max_length=255)
     value = models.TextField()
 
     class Meta:
