@@ -27,7 +27,7 @@ class HierarkeyForm(forms.Form):
         kwargs['initial'] = self._s.freeze()
         super().__init__(*args, **kwargs)
 
-    def save(self):
+    def save(self) -> None:
         """
         Saves all changed values to the database.
         """
@@ -43,10 +43,7 @@ class HierarkeyForm(forms.Form):
                         logger.error('Deleting file %s failed.' % fname.name)
 
                 # Create new file
-                nonce = get_random_string(length=8)
-                # TODO: Configurable directory structure
-                fname = '%s/%s.%s.%s' % (self.obj.pk, name, nonce, value.name.split('.')[-1])
-                newname = default_storage.save(fname, value)
+                newname = default_storage.save(self.get_new_filename(value.name), value)
                 value._name = newname
                 self._s.set(name, value)
             elif isinstance(value, File):
@@ -65,3 +62,16 @@ class HierarkeyForm(forms.Form):
                 del self._s[name]
             elif self._s.get(name, as_type=type(value)) != value:
                 self._s.set(name, value)
+
+    def get_new_filename(self, name: str) -> str:
+        """
+        Returns the file name to use based on the original filename of an uploaded file.
+        By default, the file name is constructed as::
+        
+            <model_name>-<attribute_name>/<primary_key>/<original_basename>.<random_nonce>.<extension>
+        """
+        nonce = get_random_string(length=8)
+        return '%s-%s/%s/%s.%s.%s' % (
+            self.obj._meta.model_name, self.attribute_name,
+            self.obj.pk, name, nonce, name.split('.')[-1]
+        )

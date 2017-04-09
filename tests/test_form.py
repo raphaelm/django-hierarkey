@@ -9,7 +9,7 @@ from hierarkey.forms import HierarkeyForm
 from .testapp.models import GlobalSettings, Organization, hierarkey
 
 
-class TestForm(HierarkeyForm):
+class SampleForm(HierarkeyForm):
     test_string = forms.CharField(max_length=100, required=False)
     test_int = forms.IntegerField(required=False)
     test_file = forms.FileField(required=False)
@@ -23,7 +23,7 @@ def organization():
 @pytest.mark.django_db
 def test_form_defaults(organization):
     hierarkey.add_default('test_string', 'hallo')
-    form = TestForm(obj=organization, attribute_name='settings')
+    form = SampleForm(obj=organization, attribute_name='settings')
     assert form.initial['test_string'] == 'hallo'
 
 
@@ -31,13 +31,13 @@ def test_form_defaults(organization):
 def test_form_initial_values(organization):
     hierarkey.add_default('test_string', 'hallo')
     organization.settings.test_string = 'bar'
-    form = TestForm(obj=organization, attribute_name='settings')
+    form = SampleForm(obj=organization, attribute_name='settings')
     assert form.initial['test_string'] == 'bar'
 
 
 @pytest.mark.django_db
 def test_form_save_plain_values(organization):
-    form = TestForm(obj=organization, attribute_name='settings', data={
+    form = SampleForm(obj=organization, attribute_name='settings', data={
         'test_string': 'foobar',
         'test_int': 42
     })
@@ -51,7 +51,7 @@ def test_form_save_plain_values(organization):
 @pytest.mark.django_db
 def test_form_save_new_file(organization):
     val = SimpleUploadedFile("sample_invalid_image.jpg", b"file_content", content_type="image/jpeg")
-    form = TestForm(obj=organization, attribute_name='settings', data={}, files={
+    form = SampleForm(obj=organization, attribute_name='settings', data={}, files={
         'test_file': val
     })
     assert form.is_valid()
@@ -66,7 +66,7 @@ def test_form_save_new_file(organization):
 @pytest.mark.django_db
 def test_form_save_replaced_file(organization):
     val = SimpleUploadedFile("sample_invalid_image.jpg", b"file_content", content_type="image/jpeg")
-    form = TestForm(obj=organization, attribute_name='settings', data={}, files={
+    form = SampleForm(obj=organization, attribute_name='settings', data={}, files={
         'test_file': val
     })
     assert form.is_valid()
@@ -76,7 +76,7 @@ def test_form_save_replaced_file(organization):
     oldname = organization.settings.get('test_file', as_type=File, binary_file=True).name
 
     val = SimpleUploadedFile("sample_invalid_image.jpg", b"file_content_2", content_type="image/jpeg")
-    form = TestForm(obj=organization, attribute_name='settings', data={}, files={
+    form = SampleForm(obj=organization, attribute_name='settings', data={}, files={
         'test_file': val
     })
     assert form.is_valid()
@@ -91,7 +91,7 @@ def test_form_save_replaced_file(organization):
 @pytest.mark.django_db
 def test_form_save_unchanged_file(organization):
     val = SimpleUploadedFile("sample_invalid_image.jpg", b"file_content", content_type="image/jpeg")
-    form = TestForm(obj=organization, attribute_name='settings', data={}, files={
+    form = SampleForm(obj=organization, attribute_name='settings', data={}, files={
         'test_file': val
     })
     assert form.is_valid()
@@ -100,7 +100,7 @@ def test_form_save_unchanged_file(organization):
     organization.settings.flush()
     oldname = organization.settings.get('test_file', as_type=File, binary_file=True).name
 
-    form = TestForm(obj=organization, attribute_name='settings', data={'unaffected': 'on'}, files={})
+    form = SampleForm(obj=organization, attribute_name='settings', data={'unaffected': 'on'}, files={})
     assert form.is_valid()
     form.save()
 
@@ -111,7 +111,7 @@ def test_form_save_unchanged_file(organization):
 @pytest.mark.django_db
 def test_form_delete_file(organization):
     val = SimpleUploadedFile("sample_invalid_image.jpg", b"file_content", content_type="image/jpeg")
-    form = TestForm(obj=organization, attribute_name='settings', data={}, files={
+    form = SampleForm(obj=organization, attribute_name='settings', data={}, files={
         'test_file': val
     })
     assert form.is_valid()
@@ -120,7 +120,7 @@ def test_form_delete_file(organization):
     organization.settings.flush()
     oldname = organization.settings.get('test_file', as_type=File, binary_file=True).name
 
-    form = TestForm(obj=organization, attribute_name='settings', data={
+    form = SampleForm(obj=organization, attribute_name='settings', data={
         'test_file-clear': 'on'
     })
     assert form.is_valid()

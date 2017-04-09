@@ -15,4 +15,5 @@ open the file in binary mode.
 When you use our :ref:`forms support <forms>`, this is done automatically for you. You can just specify a
 normal ``django.forms.FileField`` field on the model and ``HierarkeyForm`` will deal with storing the file
 to the default storage backend as well as deleting and replacing files. The filename will be automatically generated
-based on the primary key of your model, the key in the storage, and a random nonce.
+based on the primary key of your model, the key in the storage, and a random nonce. You can change this behaviour by
+overriding :py:meth:`get_new_filename() <hierarkey.forms.HierarkeyForm.get_new_filename>` on your form.

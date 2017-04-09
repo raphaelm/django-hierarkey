@@ -28,5 +28,10 @@ Documentation content
    exttype
    files
 
+Author and License
+------------------
+
+This package has been created by Raphael Michel and is published under the terms of the Apache License 2.0.
+
 .. _pretix: https://github.com/pretix/pretix
 .. _django: https://www.djangoproject.com/
