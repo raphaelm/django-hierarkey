@@ -38,3 +38,6 @@ When using a class-based ``FormView``, you could integrate it like this::
         def form_valid(form):
             form.save()
             return super().form_valid(form)
+
+.. note:: Initial values for the form will be taken from the settings storage, i.e. from the given object and the
+          global and hardcoded defaults. Initial values set directly on the form or field layer are not supported.

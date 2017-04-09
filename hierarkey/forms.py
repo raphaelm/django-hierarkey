@@ -39,7 +39,7 @@ class HierarkeyForm(forms.Form):
                 if fname:
                     try:
                         default_storage.delete(fname.name)
-                    except OSError:
+                    except OSError:  # pragma: no cover
                         logger.error('Deleting file %s failed.' % fname.name)
 
                 # Create new file
@@ -58,7 +58,7 @@ class HierarkeyForm(forms.Form):
                 if fname:
                     try:
                         default_storage.delete(fname.name)
-                    except OSError:
+                    except OSError:  # pragma: no cover
                         logger.error('Deleting file %s failed.' % fname.name)
                 del self._s[name]
             elif value is None:

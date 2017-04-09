@@ -152,6 +152,9 @@ class HierarkeyProxy:
         up to the global settings layer (if configured) will be queried. If still no value is 
         found, a default value set in ths source code will be returned if one exists. 
         If not, the value of the ``default`` argument of this method will be returned instead.
+        
+        If you receive a ``File`` object, it will already be opened. You can specify the ``binary_file`` 
+        flag to indicate that it should be opened in binary mode.
         """
         if as_type is None and key in self._h.defaults:
             as_type = self._h.defaults[key].type
