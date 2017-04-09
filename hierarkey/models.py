@@ -105,7 +105,7 @@ class Hierarkey:
             def prop(self):
                 from .proxy import HierarkeyProxy
 
-                return HierarkeyProxy.new(self,
+                return HierarkeyProxy._new(self,
                                           type=kv_model,
                                           hierarkey=hierarkey,
                                           cache_namespace=_cache_namespace)
@@ -158,11 +158,11 @@ class Hierarkey:
                 if not parent and hierarkey.global_class:
                     parent = hierarkey.global_class()
 
-                return HierarkeyProxy.new(self,
-                                          type=kv_model,
-                                          hierarkey=hierarkey,
-                                          parent=parent,
-                                          cache_namespace=_cache_namespace)
+                return HierarkeyProxy._new(self,
+                                           type=kv_model,
+                                           hierarkey=hierarkey,
+                                           parent=parent,
+                                           cache_namespace=_cache_namespace)
 
             setattr(model, self.attribute_name, cached_property(prop))
 

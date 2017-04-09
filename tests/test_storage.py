@@ -24,13 +24,13 @@ class SettingsTestCase(TestCase):
     def setUp(self):
         hierarkey.add_default('test_default', 'def', str)
         self.global_settings = GlobalSettings()
-        self.global_settings.settings._flush()
+        self.global_settings.settings.flush()
         self.organization = Organization.objects.create(name='Dummy')
-        self.organization.settings._flush()
+        self.organization.settings.flush()
         self.user = User.objects.create(
             organization=self.organization, name='Dummy'
         )
-        self.user.settings._flush()
+        self.user.settings.flush()
 
     def test_global_set_explicit(self):
         self.global_settings.settings.test = 'foo'
@@ -185,10 +185,10 @@ class SettingsTestCase(TestCase):
 
     def test_serialize_bool_implicit(self):
         self.user.settings.set('test', True)
-        self.user.settings._flush()
+        self.user.settings.flush()
         self.assertIs(self.user.settings.get('test', as_type=None), True)
         self.user.settings.set('test', False)
-        self.user.settings._flush()
+        self.user.settings.flush()
         self.assertIs(self.user.settings.get('test', as_type=None), False)
 
     def test_serialize_model(self):
@@ -203,7 +203,7 @@ class SettingsTestCase(TestCase):
         hierarkey.add_default('mytype_foo', 'bar', MyType)
         self.assertEqual(self.user.settings.get('mytype_foo'), MyType('bar'))
         self.user.settings.set('mytype_foo', MyType('baz'))
-        self.user.settings._flush()
+        self.user.settings.flush()
         self.assertEqual(self.user.settings.get('mytype_foo'), MyType('baz'))
 
     def test_serialize_unknown(self):
@@ -221,7 +221,7 @@ class SettingsTestCase(TestCase):
         default_storage.save(val.name, val)
         val.close()
         self.user.settings.set('test', val)
-        self.user.settings._flush()
+        self.user.settings.flush()
         f = self.user.settings.get('test', as_type=File)
         self.assertIsInstance(f, File)
         self.assertTrue(f.name.endswith(val.name))
@@ -232,7 +232,7 @@ class SettingsTestCase(TestCase):
         default_storage.save(val.name, val)
         val.close()
         self.user.settings.set('test', val)
-        self.user.settings._flush()
+        self.user.settings.flush()
         f = self.user.settings.get('test', as_type=File)
         self.assertIsInstance(f, File)
         self.assertTrue(f.name.endswith(val.name))
@@ -243,7 +243,7 @@ class SettingsTestCase(TestCase):
         default_storage.save(val.name, val)
         val.close()
         self.user.settings.set('test', val)
-        self.user.settings._flush()
+        self.user.settings.flush()
         f = self.user.settings.get('test')
         self.assertIsInstance(f, File)
         self.assertTrue(f.name.endswith(val.name))
@@ -254,7 +254,7 @@ class SettingsTestCase(TestCase):
         default_storage.save(val.name, val)
         val.close()
         self.organization.settings.set('test', val)
-        self.organization.settings._flush()
+        self.organization.settings.flush()
         f = self.user.settings.get('test')
         self.assertIsInstance(f, File)
         self.assertTrue(f.name.endswith(val.name))
@@ -262,7 +262,7 @@ class SettingsTestCase(TestCase):
 
     def _test_serialization(self, val, as_type):
         self.user.settings.set('test', val)
-        self.user.settings._flush()
+        self.user.settings.flush()
         self.assertEqual(self.user.settings.get('test', as_type=as_type), val)
         self.assertIsInstance(self.user.settings.get('test', as_type=as_type), as_type)
 
