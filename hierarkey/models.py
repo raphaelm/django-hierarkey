@@ -152,7 +152,7 @@ class Hierarkey:
 
                 try:
                     parent = getattr(self, parent_field) if parent_field else None
-                except models.ObjectDoesNotExist:
+                except models.ObjectDoesNotExist:  # pragma: no cover
                     parent = None
 
                 if not parent and hierarkey.global_class:

@@ -173,7 +173,7 @@ class HierarkeyProxy:
         return self.get(key)
 
     def __getattr__(self, key: str) -> Any:
-        if key.startswith('_'):
+        if key.startswith('_'):  # pragma: no cover
             return super().__getattribute__(key)
         return self.get(key)
 
@@ -204,7 +204,7 @@ class HierarkeyProxy:
         self._flush_external_cache()
 
     def __delattr__(self, key: str) -> None:
-        if key.startswith('_'):
+        if key.startswith('_'):  # pragma: no cover
             return super().__delattr__(key)
         self.delete(key)
 

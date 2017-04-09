@@ -260,6 +260,12 @@ class SettingsTestCase(TestCase):
         self.assertTrue(f.name.endswith(val.name))
         f.close()
 
+    def test_nonexistant_file(self):
+        self.organization.settings.set('test', 'file://foo')
+        self.organization.settings.flush()
+        f = self.user.settings.get('test', as_type=File)
+        self.assertIs(f, False)
+
     def _test_serialization(self, val, as_type):
         self.user.settings.set('test', val)
         self.user.settings.flush()

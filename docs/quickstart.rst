@@ -99,6 +99,8 @@ You can read and write the values in the key-value store in three ways. First, b
     user.settings.theme = 'dark'
     del user.settings.theme
 
+.. note:: Attribute access is unsupported for key starting with an underscore.
+
 Second, by item access::
 
     print(user.settings['theme'])
