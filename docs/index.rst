@@ -26,6 +26,7 @@ Documentation content
    api
    forms
    exttype
+   files
 
 .. _pretix: https://github.com/pretix/pretix
 .. _django: https://www.djangoproject.com/

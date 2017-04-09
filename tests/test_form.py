@@ -2,7 +2,6 @@ import os
 
 import pytest
 from django import forms
-from django.core.exceptions import ImproperlyConfigured
 from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 
