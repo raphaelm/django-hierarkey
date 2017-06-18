@@ -23,8 +23,8 @@ class Hierarkey:
     """
     The Hierarkey object represents one complete key-value store hierarchy. It can have one global and multiple
     object-level storages attached and holds default values as well as custom type serialization info.
-    
-    :param attribute_name: The name for the attribute on the model instances that will allow access to the 
+
+    :param attribute_name: The name for the attribute on the model instances that will allow access to the
                            storage, e.g. ``settings``.
     """
 
@@ -50,8 +50,8 @@ class Hierarkey:
     def add_default(self, key: str, value: Optional[str], default_type: type = str) -> None:
         """
         Adds a default value and a default type for a key.
-        
-        :param key: Key 
+
+        :param key: Key
         :param value: *Serialized* default value, i.e. a string or ``None``.
         :param default_type: The type to unserialize values for this key to, defaults to ``str``.
         """
@@ -60,7 +60,7 @@ class Hierarkey:
     def add_type(self, type: type, serialize: Callable[[Any], str], unserialize: Callable[[str], Any]) -> None:
         """
         Adds serialization support for a new type.
-        
+
         :param type: The type to add support for.
         :param serialize: A callable that takes an object of type ``type`` and returns a string.
         :param unserialize: A callable that takes a string and returns an object of type ``type``.
@@ -70,8 +70,8 @@ class Hierarkey:
     def set_global(self, cache_namespace: str = None) -> type:
         """
         Decorator. Attaches the global key-value store of this hierarchy to an object.
-        
-        :param cache_namespace: Optional. A custom namespace used for caching. By default this is 
+
+        :param cache_namespace: Optional. A custom namespace used for caching. By default this is
                                 constructed from the name of the class this is applied to and
                                 the ``attribute_name`` of this ``Hierarkey`` object.
         """
@@ -93,6 +93,10 @@ class Hierarkey:
             attrs = self._create_attrs(wrapped_class)
 
             model_name = '%s_%sStore' % (wrapped_class.__name__, self.attribute_name.title())
+            if getattr(sys.modules[wrapped_class.__module__], model_name, None):
+                # Already wrapped
+                return wrapped_class
+
             kv_model = self._create_model(model_name, attrs)
 
             def init(self, *args, object=None, **kwargs):
@@ -121,8 +125,8 @@ class Hierarkey:
     def add(self, cache_namespace: str = None, parent_field: str = None) -> type:
         """
         Decorator. Attaches a global key-value store to a Django model.
-        
-        :param cache_namespace: Optional. A custom namespace used for caching. By default this is 
+
+        :param cache_namespace: Optional. A custom namespace used for caching. By default this is
                                 constructed from the name of the class this is applied to and
                                 the ``attribute_name`` of this ``Hierarkey`` object.
         :param parent_field: Optional. The name of a field of this model that refers to the parent
@@ -141,6 +145,9 @@ class Hierarkey:
             attrs['object'] = models.ForeignKey(model, related_name='_%s_objects' % self.attribute_name,
                                                 on_delete=models.CASCADE)
             model_name = '%s_%sStore' % (model.__name__, self.attribute_name.title())
+            if getattr(sys.modules[model.__module__], model_name, None):
+                # Already wrapped
+                return model
             kv_model = self._create_model(model_name, attrs)
 
             setattr(sys.modules[model.__module__], model_name, kv_model)
