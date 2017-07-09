@@ -3,7 +3,6 @@ from collections import namedtuple
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.utils.functional import cached_property
 from typing import Any, Callable, Optional
 
 
@@ -106,17 +105,20 @@ class Hierarkey:
 
             hierarkey = self
 
-            def prop(self):
+            def prop(iself):
                 from .proxy import HierarkeyProxy
 
-                return HierarkeyProxy._new(self,
-                                          type=kv_model,
-                                          hierarkey=hierarkey,
-                                          cache_namespace=_cache_namespace)
+                attrname = '_hierarkey_proxy_{}_{}'.format(_cache_namespace, self.attribute_name)
+                cached = getattr(iself, attrname, None)
+                if not cached:
+                    cached = HierarkeyProxy._new(iself, type=kv_model, hierarkey=hierarkey,
+                                                 cache_namespace=_cache_namespace)
+                    setattr(iself, attrname, cached)
+                return cached
 
             setattr(sys.modules[wrapped_class.__module__], model_name, kv_model)
             setattr(wrapped_class, '_%s_objects' % self.attribute_name, kv_model.objects)
-            setattr(wrapped_class, self.attribute_name, cached_property(prop))
+            setattr(wrapped_class, self.attribute_name, property(prop))
             self.global_class = wrapped_class
             return wrapped_class
 
@@ -145,33 +147,38 @@ class Hierarkey:
             attrs['object'] = models.ForeignKey(model, related_name='_%s_objects' % self.attribute_name,
                                                 on_delete=models.CASCADE)
             model_name = '%s_%sStore' % (model.__name__, self.attribute_name.title())
-            if getattr(sys.modules[model.__module__], model_name, None):
-                # Already wrapped
-                return model
             kv_model = self._create_model(model_name, attrs)
 
             setattr(sys.modules[model.__module__], model_name, kv_model)
 
             hierarkey = self
 
-            def prop(self):
+            def prop(iself):
                 from .proxy import HierarkeyProxy
 
-                try:
-                    parent = getattr(self, parent_field) if parent_field else None
-                except models.ObjectDoesNotExist:  # pragma: no cover
-                    parent = None
+                attrname = '_hierarkey_proxy_{}_{}'.format(_cache_namespace, self.attribute_name)
+                cached = getattr(iself, attrname, None)
+                if not cached:
+                    try:
+                        parent = getattr(iself, parent_field) if parent_field else None
+                    except models.ObjectDoesNotExist:  # pragma: no cover
+                        parent = None
 
-                if not parent and hierarkey.global_class:
-                    parent = hierarkey.global_class()
+                    if not parent and hierarkey.global_class:
+                        parent = hierarkey.global_class()
 
-                return HierarkeyProxy._new(self,
-                                           type=kv_model,
-                                           hierarkey=hierarkey,
-                                           parent=parent,
-                                           cache_namespace=_cache_namespace)
+                    cached = HierarkeyProxy._new(
+                        iself,
+                        type=kv_model,
+                        hierarkey=hierarkey,
+                        parent=parent,
+                        cache_namespace=_cache_namespace
+                    )
+                    setattr(iself, attrname, cached)
+                return cached
 
-            setattr(model, self.attribute_name, cached_property(prop))
+
+            setattr(model, self.attribute_name, property(prop))
 
             return model
 
