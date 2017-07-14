@@ -29,13 +29,13 @@ When using a class-based ``FormView``, you could integrate it like this::
     class MySettingsView(FormView):
         form_class = MySettingsForm
 
-        def get_form_kwargs():
+        def get_form_kwargs(self):
             kwargs = super().get_form_kwargs()
             kwargs['attribute_name'] = 'settings'
             kwargs['obj'] = User.objects.get(...)
             return kwargs
 
-        def form_valid(form):
+        def form_valid(self, form):
             form.save()
             return super().form_valid(form)
 
