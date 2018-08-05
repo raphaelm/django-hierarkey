@@ -22,7 +22,7 @@ class Organization(models.Model):
 @hierarkey.add(cache_namespace='user', parent_field='organization')
 class User(models.Model):
     name = models.CharField(verbose_name=_('Name'), max_length=190)
-    organization = models.ForeignKey(Organization)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.name)

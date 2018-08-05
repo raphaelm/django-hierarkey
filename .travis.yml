@@ -19,6 +19,10 @@ matrix:
     - python: 3.6
       env: TOXENV=py36-django111-sqlite
     - python: 3.6
+      env: TOXENV=py36-django20-sqlite
+    - python: 3.6
+      env: TOXENV=py36-django21-sqlite
+    - python: 3.6
       env: TOXENV=coverage
     - python: 3.6
       env: TOXENV=style
