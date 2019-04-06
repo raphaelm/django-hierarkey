@@ -1,4 +1,5 @@
 import decimal
+import importlib
 import json
 from datetime import date, datetime, time
 from typing import Any, Dict, Optional
@@ -111,7 +112,9 @@ class HierarkeyProxy:
         elif as_type == time:
             return dateutil.parser.parse(value).time()
         elif as_type == QuerySet:
-            return json.loads(value)
+            data = json.loads(value)
+            model = getattr(importlib.import_module(data['module']), data['class'])
+            return model.objects.filter(pk__in=data['items'])
         elif as_type is not None:
             for t in self._h.types:
                 if issubclass(as_type, t.type):
@@ -137,7 +140,11 @@ class HierarkeyProxy:
         elif isinstance(value, File):
             return 'file://' + value.name
         elif isinstance(value, QuerySet):
-            return [self._serialize(item) for item in value]
+            return json.dumps({
+                'module': value.model.__module__,
+                'class': value.model.__name__,
+                'items': [self._serialize(item) for item in value]
+            })
         else:
             for t in self._h.types:
                 if isinstance(value, t.type):
