@@ -7,7 +7,7 @@ import dateutil.parser
 from django.core.cache import cache
 from django.core.files import File
 from django.core.files.storage import default_storage
-from django.db.models import Model
+from django.db.models import Model, QuerySet
 
 from hierarkey.models import Hierarkey
 
@@ -110,6 +110,8 @@ class HierarkeyProxy:
             return dateutil.parser.parse(value).date()
         elif as_type == time:
             return dateutil.parser.parse(value).time()
+        elif as_type == QuerySet:
+            return json.loads(value)
         elif as_type is not None:
             for t in self._h.types:
                 if issubclass(as_type, t.type):
@@ -134,6 +136,8 @@ class HierarkeyProxy:
             return value.pk
         elif isinstance(value, File):
             return 'file://' + value.name
+        elif isinstance(value, QuerySet):
+            return [self._serialize(item) for item in value]
         else:
             for t in self._h.types:
                 if isinstance(value, t.type):
@@ -145,7 +149,7 @@ class HierarkeyProxy:
         """
         Get a setting specified by key ``key``. Normally, settings are strings, but
         if you put non-strings into the settings object, you can request unserialization
-        by specifying ``as_type``. If the key does not have a harcdoded default type,
+        by specifying ``as_type``. If the key does not have a hardcoded default type,
         omitting ``as_type`` always will get you a string.
 
         If the setting with the specified name does not exist on this object, any parent object
