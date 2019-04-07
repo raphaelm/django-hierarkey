@@ -1,5 +1,6 @@
 language: python
 sudo: false
+dist: xenial
 install:
   - pip install tox
 script:
@@ -23,6 +24,10 @@ matrix:
     - python: 3.6
       env: TOXENV=py36-django21-sqlite
     - python: 3.6
+      env: TOXENV=py36-django22-sqlite
+    - python: 3.7
+      env: TOXENV=py37-django22-sqlite
+    - python: 3.7
       env: TOXENV=coverage
-    - python: 3.6
+    - python: 3.7
       env: TOXENV=style
