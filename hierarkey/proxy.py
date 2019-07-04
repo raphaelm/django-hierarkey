@@ -141,10 +141,10 @@ class HierarkeyProxy:
 
         raise TypeError('Unable to serialize %s into a setting.' % str(type(value)))
 
-    def get(self, key: str, default=None, as_type: type = None, binary_file=False):
+    def get(self, key: str, default=None, as_type: type=None, binary_file: bool=False):
         """
-        Get a setting specified by key ``key``. Normally, settings are strings, but
-        if you put non-strings into the settings object, you can request unserialization
+        Get a setting specified by ``key``. Normally, settings are strings, but
+        if you put non-strings into the settings object, you can request deserialization
         by specifying ``as_type``. If the key does not have a harcdoded default type,
         omitting ``as_type`` always will get you a string.
 
@@ -190,7 +190,7 @@ class HierarkeyProxy:
 
     def set(self, key: str, value: Any) -> None:
         """
-        Stores a setting to the database of its object. 
+        Stores a setting in the database and connects it to its object.
         
         The write to the database is performed immediately and the cache in the cache backend is flushed.
         The cache within this object will be updated correctly.

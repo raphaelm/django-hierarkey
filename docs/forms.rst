@@ -3,7 +3,7 @@
 Forms
 =====
 
-Hierarkey provides a form base class that makes it really easy to manipulate values of a key-value store.
+Hierarkey provides a form base class to manipulate values of a key-value store.
 You just define your form as you normally would::
 
     from django import forms
@@ -15,11 +15,11 @@ You just define your form as you normally would::
         )
         ...
 
-You can use any form field that results in a data type that can be serialized and unserialized by hierarkey.
+You can use any form field that results in a data type that can be serialized and deserialized by hierarkey.
 This includes most form fields defined by Django and even :ref:`custom types <customtype>`.
 
-To save the data, you cann call the ``save()`` method on the form.
-Note that the form takes two additional arguments to instantiate it, the object that you want to update the values for
+To save the data, you can call the ``save()`` method on the form.
+Note that the form takes two additional arguments: The object that you want to update the values for
 (i.e. a ``GlobalSettings`` object or a model instance) and the ``attribute_name`` the storage is located at.
 When using a class-based ``FormView``, you could integrate it like this::
 

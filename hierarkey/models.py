@@ -52,7 +52,7 @@ class Hierarkey:
 
         :param key: Key
         :param value: *Serialized* default value, i.e. a string or ``None``.
-        :param default_type: The type to unserialize values for this key to, defaults to ``str``.
+        :param default_type: The type to deserialize values for this key to, defaults to ``str``.
         """
         self.defaults[key] = HierarkeyDefault(value, default_type)
 
