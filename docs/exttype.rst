@@ -3,7 +3,7 @@
 Custom types
 ============
 
-You can easily add support for serializing and unserializing custom types, for example like this::
+You can add support for serializing and deserializing custom types like this::
 
     class MyMessageType:
         def __init__(self, msg):
@@ -20,6 +20,6 @@ You can easily add support for serializing and unserializing custom types, for e
     # Serialize
     user.settings.set('myproperty', MyMessageType('Hello'))
 
-    # Unserizalize
+    # Deserizalize
     # will return MyMessageType('Hello')
     user.settings.get('myproperty', as_type=MyMessageType)

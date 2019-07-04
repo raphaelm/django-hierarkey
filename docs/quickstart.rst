@@ -13,7 +13,7 @@ That's it!
 Attach a storage to a single models
 -----------------------------------
 
-As a simple first example, we will attach a storage object to a single model.
+As a first example, we will attach a storage object to a single model.
 For example, you could use this to store settings for every user.
 If you want to use the hierarchical features of hierarkey, just skip to the next example.
 
@@ -45,7 +45,7 @@ Build a hierarchical storage
 
 To build a hierarchy, we need multiple models. In our example, we will have a three-level hierarchy,
 consisting of global settings, organization settings and user settings. You can use more levels if you
-want to or you can omit the global settings. There can only be one level of global settings.
+want to, or you can omit the global settings. There can only be one level of global settings.
 
 As in the previous example, we first create a ``Hierarkey`` object::
 
@@ -53,16 +53,15 @@ As in the previous example, we first create a ``Hierarkey`` object::
 
     hierarkey = Hierarkey(attribute_name='settings')
 
-Next, we define a class that we attach the global settings to. This class can be empty and is not needed
+Next, we define a class, and attach the global settings. This class can be empty and is not needed
 except for consistency in the hierarkey API. You can define it like this::
 
     @hierarkey.set_global()
     class GlobalSettings(GlobalSettingsBase):
         pass
 
-Then, we add our other two layers. Note that the organization layer works the same way as the simple
-example above, while the for the user model we specify the name of the field containing the foreign key
-field refering to the parent object::
+Then, we add our other two layers. The organization layer works the same way as in the first
+example above. In contrast, for the user model we have to specify the name of the parent relation::
 
     @hierarkey.add()
     class Organization(models.Model):
@@ -115,13 +114,13 @@ And third, using explicit methods::
 
 All changes are written to the database instantly, while values are read eagerly and are being cached.
 
-Unserialization will only be automatically performed for keys that have a default value specified in code.
-If you want to unserialize other keys, you need to use the explicit getter methods and specify the type
+Deserialization will only be automatically performed for keys that have a default value specified in code.
+If you want to deserialize other keys, you need to use the explicit getter methods and specify the type
 yourself::
 
     user.settings.get('theme', as_type=int)
 
-To access the global settings, you can instantiate the global setttings class you defined before::
+To access the global settings, you can instantiate the global settings class you defined before::
 
     GlobalSettings().settings.get(…)
 

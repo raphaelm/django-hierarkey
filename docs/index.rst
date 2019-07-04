@@ -11,7 +11,7 @@ django-hierarkey
    :target: https://codecov.io/gh/raphaelm/django-hierarkey
 
 This package allows you to attach a key-value store to a model, e.g. to store preferences of
-an user or a customer. The package supports arbitrary datatypes, defaults and model hierarchies,
+a user or a customer. The package supports arbitrary datatypes, defaults and model hierarchies,
 i.e. you can define a different model instance as your instance's parent and the values of the
 parent instance will be used as default values for the child instances.
 

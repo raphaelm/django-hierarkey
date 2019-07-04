@@ -3,7 +3,7 @@
 File handling
 =============
 
-Hierarkey has rudimentary support of saving a ``file`` into the key-value storage. In this case, not the *content*
+Hierarkey has rudimentary support for saving a ``file`` into the key-value storage. In this case, not the *content*
 of the file will be saved in the key-value store. Instead, only the *name* of the file within the configured Django
 storage backend will be saved.
 

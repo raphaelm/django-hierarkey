@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class HierarkeyForm(forms.Form):
     """
-    This is a custom subclass of django.forms.Form that you can use to easily set
+    This is a custom subclass of ``django.forms.Form`` that you can use to set
     values for any keys. See the Forms chapter of the documentation for more details.
     """
     BOOL_CHOICES = (
