@@ -1,9 +1,9 @@
 import sys
 from collections import namedtuple
+from typing import Any, Callable, Optional
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from typing import Any, Callable, Optional
 
 
 class BaseHierarkeyStoreModel(models.Model):
@@ -176,7 +176,6 @@ class Hierarkey:
                     )
                     setattr(iself, attrname, cached)
                 return cached
-
 
             setattr(model, self.attribute_name, property(prop))
 

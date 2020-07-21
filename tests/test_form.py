@@ -6,7 +6,8 @@ from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from hierarkey.forms import HierarkeyForm
-from .testapp.models import GlobalSettings, Organization, hierarkey
+
+from .testapp.models import Organization, hierarkey
 
 
 class SampleForm(HierarkeyForm):

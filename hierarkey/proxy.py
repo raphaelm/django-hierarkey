@@ -16,14 +16,14 @@ class HierarkeyProxy:
     """
     If you add a hierarkey storage to a model, the model will get a new attribute (e.g. ``settings``) containing
     a key-value store that is managed by this class.
-    
-    This class allows access to settings via attribute access, item access or using the documented methods.    
+
+    This class allows access to settings via attribute access, item access or using the documented methods.
     You should not instantiate this class yourself.
     """
 
     @classmethod
     def _new(cls, obj: Model, hierarkey: Hierarkey, cache_namespace: str, parent: Optional[Model] = None,
-             type: type=None):
+             type: type = None):
         o = HierarkeyProxy()
         o._obj = obj
         o._h = hierarkey
@@ -141,7 +141,7 @@ class HierarkeyProxy:
 
         raise TypeError('Unable to serialize %s into a setting.' % str(type(value)))
 
-    def get(self, key: str, default=None, as_type: type=None, binary_file: bool=False):
+    def get(self, key: str, default=None, as_type: type = None, binary_file: bool = False):
         """
         Get a setting specified by ``key``. Normally, settings are strings, but
         if you put non-strings into the settings object, you can request deserialization
@@ -149,11 +149,11 @@ class HierarkeyProxy:
         omitting ``as_type`` always will get you a string.
 
         If the setting with the specified name does not exist on this object, any parent object
-        up to the global settings layer (if configured) will be queried. If still no value is 
-        found, a default value set in ths source code will be returned if one exists. 
+        up to the global settings layer (if configured) will be queried. If still no value is
+        found, a default value set in ths source code will be returned if one exists.
         If not, the value of the ``default`` argument of this method will be returned instead.
-        
-        If you receive a ``File`` object, it will already be opened. You can specify the ``binary_file`` 
+
+        If you receive a ``File`` object, it will already be opened. You can specify the ``binary_file``
         flag to indicate that it should be opened in binary mode.
         """
         if as_type is None and key in self._h.defaults:
@@ -191,7 +191,7 @@ class HierarkeyProxy:
     def set(self, key: str, value: Any) -> None:
         """
         Stores a setting in the database and connects it to its object.
-        
+
         The write to the database is performed immediately and the cache in the cache backend is flushed.
         The cache within this object will be updated correctly.
         """
@@ -217,7 +217,7 @@ class HierarkeyProxy:
     def delete(self, key: str) -> None:
         """
         Deletes a setting from this object's storage.
-        
+
         The write to the database is performed immediately and the cache in the cache backend is flushed.
         The cache within this object will be updated correctly.
         """

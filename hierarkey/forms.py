@@ -67,7 +67,7 @@ class HierarkeyForm(forms.Form):
         """
         Returns the file name to use based on the original filename of an uploaded file.
         By default, the file name is constructed as::
-        
+
             <model_name>-<attribute_name>/<primary_key>/<original_basename>.<random_nonce>.<extension>
         """
         nonce = get_random_string(length=8)
