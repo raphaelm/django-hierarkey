@@ -49,7 +49,7 @@ class HierarkeyForm(forms.Form):
             elif isinstance(value, File):
                 # file is unchanged
                 continue
-            elif isinstance(field, forms.FileField):
+            elif not value and isinstance(field, forms.FileField):
                 # file is deleted
                 fname = self._s.get(name, as_type=File)
                 if fname:
