@@ -21,7 +21,7 @@ matrix:
       env: TOXENV=py37-django22-sqlite
     - python: 3.7
       env: TOXENV=py37-django30-sqlite
-    - python: 3.7
+    - python: 3.8
       env: TOXENV=coverage
-    - python: 3.7
+    - python: 3.8
       env: TOXENV=style
