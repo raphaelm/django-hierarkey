@@ -24,7 +24,9 @@ class HierarkeyForm(forms.Form):
         self.obj = obj
         self.attribute_name = attribute_name
         self._s = getattr(obj, attribute_name)
-        kwargs['initial'] = self._s.freeze()
+        initial = kwargs.pop('initial', {})
+        initial.update(self._s.freeze())
+        kwargs['initial'] = initial
         super().__init__(*args, **kwargs)
 
     def save(self) -> None:
