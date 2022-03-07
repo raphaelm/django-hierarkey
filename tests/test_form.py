@@ -130,3 +130,40 @@ def test_form_delete_file(organization):
     organization.settings.flush()
     assert not organization.settings.test_file
     assert not os.path.exists(oldname)
+
+
+@pytest.mark.django_db
+def test_form_do_not_delete_file_if_referenced(organization):
+    val = SimpleUploadedFile("sample_invalid_image.jpg", b"file_content", content_type="image/jpeg")
+    form = SampleForm(obj=organization, attribute_name='settings', data={}, files={
+        'test_file': val
+    })
+    assert form.is_valid()
+    form.save()
+
+    organization.settings.flush()
+
+    org2 = Organization.objects.create(name='Bar')
+    org2.settings.test_file = organization.settings.get('test_file', as_type=str)
+
+    oldname = organization.settings.get('test_file', as_type=File, binary_file=True).name
+
+    form = SampleForm(obj=organization, attribute_name='settings', data={
+        'test_file-clear': 'on'
+    })
+    assert form.is_valid()
+    form.save()
+
+    organization.settings.flush()
+    assert not organization.settings.test_file
+    assert os.path.exists(oldname)
+
+    form = SampleForm(obj=org2, attribute_name='settings', data={
+        'test_file-clear': 'on'
+    })
+    assert form.is_valid()
+    form.save()
+
+    organization.settings.flush()
+    assert not org2.settings.test_file
+    assert not os.path.exists(oldname)

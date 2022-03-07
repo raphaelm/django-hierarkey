@@ -1,11 +1,14 @@
 import logging
 
 from django import forms
+from django.core.exceptions import FieldDoesNotExist
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
+
+from hierarkey.models import BaseHierarkeyStoreModel
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ class HierarkeyForm(forms.Form):
             if isinstance(value, UploadedFile):
                 # Delete old file
                 fname = self._s.get(name, as_type=File)
-                if fname:
+                if fname and self.__file_is_last_reference(name, self._s.get(name, as_type=str)):
                     try:
                         default_storage.delete(fname.name)
                     except OSError:  # pragma: no cover
@@ -54,7 +57,7 @@ class HierarkeyForm(forms.Form):
             elif not value and isinstance(field, forms.FileField):
                 # file is deleted
                 fname = self._s.get(name, as_type=File)
-                if fname:
+                if fname and self.__file_is_last_reference(name, self._s.get(name, as_type=str)):
                     try:
                         default_storage.delete(fname.name)
                     except OSError:  # pragma: no cover
@@ -64,6 +67,22 @@ class HierarkeyForm(forms.Form):
                 del self._s[name]
             elif self._s.get(name, as_type=type(value)) != value:
                 self._s.set(name, value)
+
+    def __file_is_last_reference(self, key, value):
+        for klass in BaseHierarkeyStoreModel.__subclasses__():
+            if klass._meta.abstract:
+                continue
+            qs = klass.objects.filter(key=key, value=value)
+            try:
+                if isinstance(self.obj, klass._meta.get_field('object').remote_field.model):
+                    qs = qs.exclude(object=self.obj)
+            except FieldDoesNotExist:
+                pass
+            print(klass, qs)
+            if qs.exists():
+                print("false", qs, self.obj, klass)
+                return False
+        return True
 
     def get_new_filename(self, name: str) -> str:
         """
