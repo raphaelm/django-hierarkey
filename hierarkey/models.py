@@ -10,6 +10,13 @@ class BaseHierarkeyStoreModel(models.Model):
     key = models.CharField(max_length=255)
     value = models.TextField()
 
+    def __repr__(self):
+        return '<{}: "{}"{}>'.format(
+            type(self).__name__,
+            self.key,
+            ' on object {}'.format(self.object_id) if hasattr(self, 'object_id') else '',
+        )
+
     class Meta:
         abstract = True
 
