@@ -7,12 +7,6 @@ django-hierarkey -- Hierarchical key-value store
 .. image:: https://readthedocs.org/projects/django-hierarkey/badge/?version=latest
    :target: https://django-hierarkey.readthedocs.io/
 
-.. image:: https://travis-ci.org/raphaelm/django-hierarkey.svg?branch=master
-   :target: https://travis-ci.org/raphaelm/django-hierarkey
-
-.. image:: https://codecov.io/gh/raphaelm/django-hierarkey/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/raphaelm/django-hierarkey
-
 This package allows you to attach a key-value store to a model, e.g. to store preferences of
 an user or a customer. The package supports arbitrary datatypes, defaults and model hierarchies,
 i.e. you can define a different model instance as your instance's parent and the values of the
@@ -21,7 +15,7 @@ parent instance will be used as default values for the child instances.
 This approach has been in use in `pretix`_ for quite a while, so it has been tested in
 production.
 
-Tested with Python 3.4-3.7 and Django 1.9-2.2.
+Tested with Python 3.8-3.10 and Django 3.2-4.0.
 
 License
 -------
