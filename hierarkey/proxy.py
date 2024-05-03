@@ -156,8 +156,8 @@ class HierarkeyProxy:
         If you receive a ``File`` object, it will already be opened. You can specify the ``binary_file``
         flag to indicate that it should be opened in binary mode.
         """
-        if as_type is None and key in self._h.defaults:
-            as_type = self._h.defaults[key].type
+        if as_type is None:
+            as_type = self._h.get_declared_type(key)
 
         if key in self._cache():
             value = self._cache()[key]
