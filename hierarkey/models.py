@@ -63,6 +63,14 @@ class Hierarkey:
         """
         self.defaults[key] = HierarkeyDefault(value, default_type)
 
+    def get_declared_type(self, key: str) -> type:
+        """
+        Returns the type that is declared for a key using add_default.
+
+        :param key: Key
+        """
+        return self.defaults[key].type if key in self.defaults else None
+
     def add_type(self, type: type, serialize: Callable[[Any], str], unserialize: Callable[[str], Any]) -> None:
         """
         Adds serialization support for a new type.
