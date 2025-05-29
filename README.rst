@@ -21,7 +21,7 @@ Tested with Python 3.8-3.10 and Django 3.2-4.0.
 Security
 --------
 
-If you discover a security issue, please contact us at security@pretix.eu and see our [Responsible Disclosure Policy](https://docs.pretix.eu/trust/security/disclosure/) further information.
+If you discover a security issue, please contact us at security@pretix.eu and see our `Responsible Disclosure Policy`_ further information.
 
 
 License
@@ -33,3 +33,4 @@ This project is maintained by Raphael Michel <mail@raphaelmichel.de>. See the
 AUTHORS file for a list of all the awesome folks who contributed to this project.
 
 .. _pretix: https://github.com/pretix/pretix
+.. _Responsible Disclosure Policy: https://docs.pretix.eu/trust/security/disclosure/
