@@ -17,6 +17,13 @@ production.
 
 Tested with Python 3.8-3.10 and Django 3.2-4.0.
 
+
+Security
+--------
+
+If you discover a security issue, please contact us at security@pretix.eu and see our [Responsible Disclosure Policy](https://docs.pretix.eu/trust/security/disclosure/) further information.
+
+
 License
 -------
 The code in this repository is published under the terms of the Apache License. 
