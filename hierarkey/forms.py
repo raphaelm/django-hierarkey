@@ -6,6 +6,7 @@ from django.core.files import File
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.crypto import get_random_string
+from django.utils.text import normalize_newlines
 from django.utils.translation import gettext_lazy as _
 
 from hierarkey.models import BaseHierarkeyStoreModel
@@ -65,6 +66,9 @@ class HierarkeyForm(forms.Form):
                 del self._s[name]
             elif value is None:
                 del self._s[name]
+            elif type(value) == str:
+                if normalize_newlines(self._s.get(name, as_type=str)) != normalize_newlines(value):
+                    self._s.set(name, value)
             elif self._s.get(name, as_type=type(value)) != value:
                 self._s.set(name, value)
 
