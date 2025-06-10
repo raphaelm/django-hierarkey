@@ -51,7 +51,7 @@ def test_form_save_plain_values(organization):
 
 @pytest.mark.django_db
 def test_form_ignore_newline_change(organization):
-    organization.settings.text_String == 'foo\nbar'
+    organization.settings.text_string == 'foo\nbar'
     form = SampleForm(obj=organization, attribute_name='settings', data={
         'test_string': 'foo\r\nbar',
         'test_int': 42
