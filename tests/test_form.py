@@ -50,6 +50,20 @@ def test_form_save_plain_values(organization):
 
 
 @pytest.mark.django_db
+def test_form_ignore_newline_change(organization):
+    organization.settings.text_String == 'foo\nbar'
+    form = SampleForm(obj=organization, attribute_name='settings', data={
+        'test_string': 'foo\r\nbar',
+        'test_int': 42
+    })
+    assert form.is_valid()
+    form.save()
+    organization.settings.flush()
+    assert organization.settings.test_string == 'foo\nbar'
+    assert organization.settings.test_int == '42'
+
+
+@pytest.mark.django_db
 def test_form_save_new_file(organization):
     val = SimpleUploadedFile("sample_invalid_image.jpg", b"file_content", content_type="image/jpeg")
     form = SampleForm(obj=organization, attribute_name='settings', data={}, files={
