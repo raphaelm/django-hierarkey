@@ -18,7 +18,9 @@ class SampleForm(HierarkeyForm):
 
 @pytest.fixture
 def organization():
-    return Organization.objects.create(name='Foo')
+    o = Organization.objects.create(name='Foo')
+    o.settings.flush()
+    return o
 
 
 @pytest.mark.django_db
@@ -46,6 +48,29 @@ def test_form_save_plain_values(organization):
     form.save()
     organization.settings.flush()
     assert organization.settings.test_string == 'foobar'
+    assert organization.settings.test_int == '42'
+
+
+@pytest.mark.django_db
+def test_form_ignore_newline_change(organization):
+    form = SampleForm(obj=organization, attribute_name='settings', data={
+        'test_string': 'foo\nbar',
+        'test_int': 42
+    })
+    assert form.is_valid()
+    form.save()
+    organization.settings.flush()
+    assert organization.settings.test_string == 'foo\nbar'
+    assert organization.settings.test_int == '42'
+
+    form = SampleForm(obj=organization, attribute_name='settings', data={
+        'test_string': 'foo\r\nbar',
+        'test_int': 42
+    })
+    assert form.is_valid()
+    form.save()
+    organization.settings.flush()
+    assert organization.settings.test_string == 'foo\nbar'
     assert organization.settings.test_int == '42'
 
 
