@@ -66,8 +66,8 @@ class HierarkeyForm(forms.Form):
                 del self._s[name]
             elif value is None:
                 del self._s[name]
-            elif type(value) == str:
-                if normalize_newlines(self._s.get(name, as_type=str)) is not normalize_newlines(value):
+            elif type(value) is str:
+                if normalize_newlines(self._s.get(name, as_type=str)) != normalize_newlines(value):
                     self._s.set(name, value)
             elif self._s.get(name, as_type=type(value)) != value:
                 self._s.set(name, value)
