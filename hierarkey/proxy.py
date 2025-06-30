@@ -195,15 +195,22 @@ class HierarkeyProxy:
         The write to the database is performed immediately and the cache in the cache backend is flushed.
         The cache within this object will be updated correctly.
         """
+        serialized_value = self._serialize(value)
         wc = self._write_cache()
         if key in wc:
             s = wc[key]
+            s.value = serialized_value
+            s.save(update_fields=['value'])
         else:
-            s = self._type(object=self._obj, key=key)
-        s.value = self._serialize(value)
-        s.save()
+            s, created = self._type.objects.update_or_create(
+                object=self._obj,
+                key=key,
+                defaults={
+                    "value": serialized_value,
+                }
+            )
+            wc[key] = s
         self._cache()[key] = s.value
-        wc[key] = s
         self._flush_external_cache()
 
     def __delattr__(self, key: str) -> None:
