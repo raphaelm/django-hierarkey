@@ -11,12 +11,12 @@ To upgrade from 1.x to 2.x, first increase your dependency version number or ins
 
 Then, instruct Django to create the new required migrations::
 
-    $ python manage.py makemigrations pretixbase
-    Migrations for 'pretixbase':
-      pretix/base/migrations/0284_alter_event_settingsstore_unique_together_and_more.py
-        - Alter unique_together for event_settingsstore (1 constraint(s))
-        - Alter unique_together for globalsettingsobject_settingsstore (1 constraint(s))
-        - Alter unique_together for organizer_settingsstore (1 constraint(s))
+    $ python manage.py makemigrations
+    Migrations for 'demoapp':
+      demoapp/migrations/0002_alter_globalsettings_settingsstore_unique_together_and_more.py
+        ~ Alter unique_together for globalsettings_settingsstore (1 constraint(s))
+        ~ Alter unique_together for organization_settingsstore (1 constraint(s))
+        ~ Alter unique_together for user_settingsstore (1 constraint(s))
 
 Now, the resulting migration will look similar to this::
 
@@ -24,26 +24,27 @@ Now, the resulting migration will look similar to this::
 
 
     class Migration(migrations.Migration):
+
         dependencies = [
-            ("pretixbase", "0283_taxrule_default_taxrule_backfill"),
+            ("demoapp", "0001_initial"),
         ]
 
         operations = [
             migrations.AlterUniqueTogether(
-                name="event_settingsstore",
-                unique_together={("object", "key")},
-            ),
-            migrations.AlterUniqueTogether(
-                name="globalsettingsobject_settingsstore",
+                name="globalsettings_settingsstore",
                 unique_together={("key",)},
             ),
             migrations.AlterUniqueTogether(
-                name="organizer_settingsstore",
+                name="organization_settingsstore",
+                unique_together={("object", "key")},
+            ),
+            migrations.AlterUniqueTogether(
+                name="user_settingsstore",
                 unique_together={("object", "key")},
             ),
         ]
 
-This migration will only be possible to apply if you ahve not been affected by the bug and you do not have a single
+This migration will only be possible to apply if you have not been affected by the bug and you do not have a single
 affected. To make the migration robust, you need to insert a cleanup step before creation of the unique key. In our
 example above, the migration would be modified like this::
 
@@ -54,23 +55,23 @@ example above, the migration would be modified like this::
      class Migration(migrations.Migration):
 
          dependencies = [
-             ("pretixbase", "0283_taxrule_default_taxrule_backfill"),
+             ("demoapp", "0001_initial"),
          ]
 
          operations = [
-    +        CleanHierarkeyDuplicates("Event_SettingsStore"),
-    +        CleanHierarkeyDuplicates("GlobalSettingsObject_SettingsStore"),
-    +        CleanHierarkeyDuplicates("Organizer_SettingsStore"),
+    +        CleanHierarkeyDuplicates("GlobalSettings_SettingsStore"),
+    +        CleanHierarkeyDuplicates("Organization_SettingsStore"),
+    +        CleanHierarkeyDuplicates("User_SettingsStore"),
              migrations.AlterUniqueTogether(
-                 name="event_settingsstore",
-                 unique_together={("object", "key")},
-             ),
-             migrations.AlterUniqueTogether(
-                 name="globalsettingsobject_settingsstore",
+                 name="globalsettings_settingsstore",
                  unique_together={("key",)},
              ),
              migrations.AlterUniqueTogether(
-                 name="organizer_settingsstore",
+                 name="organization_settingsstore",
                  unique_together={("object", "key")},
              ),
-         ]
+             migrations.AlterUniqueTogether(
+                 name="user_settingsstore",
+                 unique_together={("object", "key")},
+             ),
+          ]
