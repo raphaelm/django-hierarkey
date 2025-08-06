@@ -20,6 +20,7 @@ class BaseHierarkeyStoreModel(models.Model):
     class Meta:
         abstract = True
 
+
 HierarkeyDefault = namedtuple('HierarkeyDefault', ['value', 'type'])
 HierarkeyType = namedtuple('HierarkeyType', ['type', 'serialize', 'unserialize'])
 
