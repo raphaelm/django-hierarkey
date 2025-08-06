@@ -103,16 +103,12 @@ class Hierarkey:
 
             _cache_namespace = cache_namespace or ('%s_%s' % (wrapped_class.__name__, self.attribute_name))
 
-            attrs = self._create_attrs(
-                wrapped_class,
-                (("key"), )
-            )
-
             model_name = '%s_%sStore' % (wrapped_class.__name__, self.attribute_name.title())
             if getattr(sys.modules[wrapped_class.__module__], model_name, None):
                 # Already wrapped
                 return wrapped_class
 
+            attrs = self._create_attrs(wrapped_class, (("key",),))
             kv_model = self._create_model(model_name, attrs)
 
             def init(self, *args, object=None, **kwargs):
