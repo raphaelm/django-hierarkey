@@ -1,7 +1,7 @@
-import sys
-from collections import namedtuple
 from typing import Any, Callable, Optional
 
+import sys
+from collections import namedtuple
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
