@@ -1,13 +1,14 @@
-import decimal
-import json
-from datetime import date, datetime, time
 from typing import Any, Dict, Optional
 
 import dateutil.parser
+import decimal
+import json
+from datetime import date, datetime, time
 from django.core.cache import cache
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db.models import Model
+from functools import cached_property
 
 from hierarkey.models import Hierarkey
 
@@ -30,7 +31,6 @@ class HierarkeyProxy:
         o._cache_namespace = cache_namespace
         o._parent = parent
         o._cached_obj = None
-        o._write_cached_obj = None
         o._type = type
         return o
 
@@ -51,19 +51,11 @@ class HierarkeyProxy:
             )
         return self._cached_obj
 
-    def _write_cache(self) -> Dict[str, Any]:
-        if self._write_cached_obj is None:
-            self._write_cached_obj = {
-                s.key: s for s in self._objects.all()
-            }
-        return self._write_cached_obj
-
     def flush(self) -> None:
         """
         Discards both the state within this object as well as the cache in Django's cache backend.
         """
         self._cached_obj = None
-        self._write_cached_obj = None
         self._flush_external_cache()
 
     def _flush_external_cache(self):
@@ -188,6 +180,10 @@ class HierarkeyProxy:
     def __setitem__(self, key: str, value: Any) -> None:
         self.set(key, value)
 
+    @cached_property
+    def __is_global(self):
+        return "object" not in [f.name for f in self._type._meta.fields]
+
     def set(self, key: str, value: Any) -> None:
         """
         Stores a setting in the database and connects it to its object.
@@ -195,15 +191,20 @@ class HierarkeyProxy:
         The write to the database is performed immediately and the cache in the cache backend is flushed.
         The cache within this object will be updated correctly.
         """
-        wc = self._write_cache()
-        if key in wc:
-            s = wc[key]
-        else:
-            s = self._type(object=self._obj, key=key)
-        s.value = self._serialize(value)
-        s.save()
+        serialized_value = self._serialize(value)
+
+        key_attributes = {
+            "key": key,
+        }
+        if not self.__is_global:
+            key_attributes["object"] = self._obj
+        s, created = self._type.objects.update_or_create(
+            **key_attributes,
+            defaults={
+                "value": serialized_value,
+            }
+        )
         self._cache()[key] = s.value
-        wc[key] = s
         self._flush_external_cache()
 
     def __delattr__(self, key: str) -> None:
@@ -221,9 +222,13 @@ class HierarkeyProxy:
         The write to the database is performed immediately and the cache in the cache backend is flushed.
         The cache within this object will be updated correctly.
         """
-        if key in self._write_cache():
-            self._write_cache()[key].delete()
-            del self._write_cache()[key]
+        key_attributes = {
+            "key": key,
+        }
+        if not self.__is_global:
+            key_attributes["object"] = self._obj
+
+        self._type.objects.filter(**key_attributes).delete()
 
         if key in self._cache():
             del self._cache()[key]

@@ -5,7 +5,7 @@ coverage
 codecov
 sphinx
 sphinx-autobuild
-isort==4.*
+isort==6.*
 flake8
 python-dateutil
 django-extensions

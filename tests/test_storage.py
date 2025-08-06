@@ -1,6 +1,5 @@
 from datetime import date, datetime, time
 from decimal import Decimal
-
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -137,8 +136,10 @@ class SettingsTestCase(TestCase):
     def test_delete(self):
         self.organization.settings.test = 'foo'
         self.user.settings.test = 'bar'
+        self.global_settings.settings.testglobal = 'baz'
         self.assertEqual(self.organization.settings.test, 'foo')
         self.assertEqual(self.user.settings.test, 'bar')
+        self.assertEqual(self.global_settings.settings.testglobal, 'baz')
 
         del self.user.settings.test
         self.assertEqual(self.user.settings.test, 'foo')
@@ -151,6 +152,10 @@ class SettingsTestCase(TestCase):
 
         self.organization = Organization.objects.get(id=self.organization.id)
         self.assertIsNone(self.organization.settings.test)
+
+        del self.global_settings.settings.testglobal
+        self.global_settings = GlobalSettings()
+        self.assertIsNone(self.global_settings.settings.testglobal)
 
     def test_serialize_str(self):
         self._test_serialization('ABC', as_type=str)

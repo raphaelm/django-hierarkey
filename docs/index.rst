@@ -27,6 +27,7 @@ Documentation content
    forms
    exttype
    files
+   migrate_1_2
 
 Author and License
 ------------------

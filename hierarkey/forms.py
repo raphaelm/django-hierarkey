@@ -1,5 +1,4 @@
 import logging
-
 from django import forms
 from django.core.exceptions import FieldDoesNotExist
 from django.core.files import File
