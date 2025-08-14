@@ -1,7 +1,7 @@
-import sys
-from collections import namedtuple
 from typing import Any, Callable, Optional
 
+import sys
+from collections import namedtuple
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
@@ -40,9 +40,9 @@ class Hierarkey:
         self.defaults = {}
         self.types = []
 
-    def _create_attrs(self, base_model: type) -> dict:
+    def _create_attrs(self, base_model: type, unique_together_) -> dict:
         class Meta:
-            pass
+            unique_together = unique_together_
 
         attrs = {
             'Meta': Meta,
@@ -104,13 +104,12 @@ class Hierarkey:
 
             _cache_namespace = cache_namespace or ('%s_%s' % (wrapped_class.__name__, self.attribute_name))
 
-            attrs = self._create_attrs(wrapped_class)
-
             model_name = '%s_%sStore' % (wrapped_class.__name__, self.attribute_name.title())
             if getattr(sys.modules[wrapped_class.__module__], model_name, None):
                 # Already wrapped
                 return wrapped_class
 
+            attrs = self._create_attrs(wrapped_class, (("key",),))
             kv_model = self._create_model(model_name, attrs)
 
             def init(self, *args, object=None, **kwargs):
@@ -158,7 +157,7 @@ class Hierarkey:
 
             _cache_namespace = cache_namespace or ('%s_%s' % (model.__name__, self.attribute_name))
 
-            attrs = self._create_attrs(model)
+            attrs = self._create_attrs(model, (("object", "key"),))
             attrs['object'] = models.ForeignKey(model, related_name='_%s_objects' % self.attribute_name,
                                                 on_delete=models.CASCADE)
             model_name = '%s_%sStore' % (model.__name__, self.attribute_name.title())
