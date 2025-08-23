@@ -33,7 +33,7 @@ class CleanHierarkeyDuplicates(Operation):
             schema_editor.connection.alias, app_label, **self.hints
         ):
             SettingsStoreModel = from_state.apps.get_model(app_label, self.model_name)
-            is_global = "object" not in SettingsStoreModel._meta.fields
+            is_global = "object" not in [f.name for f in SettingsStoreModel._meta.fields]
 
             if is_global:
                 qs = SettingsStoreModel.objects.values("key")
@@ -50,6 +50,7 @@ class CleanHierarkeyDuplicates(Operation):
                 # list()[-1] orders by page order in the database, which is the behavior we need to match the legacy
                 # behavior
                 correct_instance = all_instances[-1]
+                assert hasattr(correct_instance, "object") == (not is_global)
                 instance_qs.exclude(pk=correct_instance.pk).delete()
                 # No need to update/clear cache as the resulting value has not changed
 
