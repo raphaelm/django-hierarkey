@@ -15,7 +15,7 @@ parent instance will be used as default values for the child instances.
 This approach has been in use in `pretix`_ for quite a while, so it has been tested in
 production.
 
-Tested with Python 3.9-3.11 and Django 4.2-5.2.
+Tested with Python 3.11-3.14 and Django 5.2-6.0.
 
 
 Security
