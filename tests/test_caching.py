@@ -37,7 +37,6 @@ class SettingsTestCase(TransactionTestCase):
 
     def _get_value(self, key):
         global_settings = GlobalSettings()
-        print("thread:", global_settings.settings._cache())
         return global_settings.settings.get(key)
 
     def test_do_not_flush_before_transaction(self):
