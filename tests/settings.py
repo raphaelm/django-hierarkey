@@ -6,6 +6,9 @@ import tempfile
 from django.utils.translation import gettext_lazy as _
 
 
+tmpdir = tempfile.TemporaryDirectory()
+atexit.register(tmpdir.cleanup)
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'kk0ai8i0dm-8^%&0&+e-rsmk8#t&)6r*y!wh=xx7l12+6k5mg4'
 
@@ -57,6 +60,22 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'OPTIONS': {
+            "init_command": """
+                PRAGMA journal_mode=WAL;
+            """,
+        },
+        'TEST': {
+            # In-memory DB does not support WAL mode
+            'NAME': os.path.join(tmpdir.name, 'db.sqlite3'),
+        }
+    },
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/var/tmp/django_cache",
     }
 }
 
@@ -74,7 +93,4 @@ LANGUAGES = [
     ('fr', _('French')),
 ]
 
-tmpdir = tempfile.TemporaryDirectory()
 MEDIA_ROOT = os.path.join(tmpdir.name, 'media')
-
-atexit.register(tmpdir.cleanup)

@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from typing import Any, Dict, Optional
 
 import dateutil.parser
@@ -7,10 +8,14 @@ from datetime import date, datetime, time
 from django.core.cache import cache
 from django.core.files import File
 from django.core.files.storage import default_storage
+from django.db import transaction
 from django.db.models import Model
 from functools import cached_property
 
 from hierarkey.models import Hierarkey
+
+
+dirty_cache_keys = ContextVar('dirty_cache_keys')
 
 
 class HierarkeyProxy:
@@ -42,11 +47,27 @@ class HierarkeyProxy:
         """
         return getattr(self._obj, '_%s_objects' % self._h.attribute_name)
 
+    @property
+    def _cache_key(self):
+        return 'hierarkey_{}_{}'.format(self._cache_namespace, self._obj.pk)
+
     def _cache(self) -> Dict[str, Any]:
+        def _read_from_db():
+            return {s.key: s.value for s in self._objects.all()}
+
         if self._cached_obj is None:
+            try:
+                if self._cache_key in dirty_cache_keys.get():
+                    # The settings were modified in this thread and marked as dirty. This means they have been changed
+                    # by either this object or another instance with the same cache key, however the changed objects
+                    # have not yet been committed to the SQL database. Therefore, they may not be exposed to the external
+                    # cache, or they would become visible for other threads immediately.
+                    return _read_from_db()
+            except LookupError:
+                pass
             self._cached_obj = cache.get_or_set(
-                'hierarkey_{}_{}'.format(self._cache_namespace, self._obj.pk),
-                lambda: {s.key: s.value for s in self._objects.all()},
+                self._cache_key,
+                _read_from_db,
                 timeout=1800
             )
         return self._cached_obj
@@ -56,10 +77,35 @@ class HierarkeyProxy:
         Discards both the state within this object as well as the cache in Django's cache backend.
         """
         self._cached_obj = None
-        self._flush_external_cache()
+        cache.delete(self._cache_key)
 
-    def _flush_external_cache(self):
-        cache.delete('hierarkey_{}_{}'.format(self._cache_namespace, self._obj.pk))
+    def _get_dirty_cache_queue(self) -> set:
+        try:
+            return dirty_cache_keys.get()
+        except LookupError:
+            r = set()
+            dirty_cache_keys.set(r)
+            return r
+
+    def _invalidate_cache(self):
+        """
+        Called after a write has been made to the database. Marks the current object as "dirty"
+        in a thread-local variable and schedules an on_commit task to flush external cache.
+        """
+        dirty_cache_queue = self._get_dirty_cache_queue()
+        if self._cache_key not in dirty_cache_queue:
+            dirty_cache_queue.add(self._cache_key)
+            transaction.on_commit(self._invalidate_cache_after_transaction)
+
+    def _invalidate_cache_after_transaction(self):
+        """
+        Called after a transaction with changes has been committed to the database. Flushes
+        the external cache and removes the "dirty" marker from the local thread.
+        """
+        dirty_cache_queue = self._get_dirty_cache_queue()
+        if self._cache_key in dirty_cache_queue:
+            dirty_cache_queue.remove(self._cache_key)
+        cache.delete(self._cache_key)
 
     def freeze(self) -> dict:
         """
@@ -204,8 +250,8 @@ class HierarkeyProxy:
                 "value": serialized_value,
             }
         )
+        self._invalidate_cache()
         self._cache()[key] = s.value
-        self._flush_external_cache()
 
     def __delattr__(self, key: str) -> None:
         if key.startswith('_'):  # pragma: no cover
@@ -230,7 +276,6 @@ class HierarkeyProxy:
 
         self._type.objects.filter(**key_attributes).delete()
 
+        self._invalidate_cache()
         if key in self._cache():
             del self._cache()[key]
-
-        self._flush_external_cache()
