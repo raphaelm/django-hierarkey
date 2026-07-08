@@ -1,9 +1,9 @@
-from contextvars import ContextVar
 from typing import Any, Dict, Optional
 
 import dateutil.parser
 import decimal
 import json
+from contextvars import ContextVar
 from datetime import date, datetime, time
 from django.core.cache import cache
 from django.core.files import File
@@ -13,7 +13,6 @@ from django.db.models import Model
 from functools import cached_property
 
 from hierarkey.models import Hierarkey
-
 
 dirty_cache_keys = ContextVar('dirty_cache_keys')
 
