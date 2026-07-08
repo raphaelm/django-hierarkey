@@ -55,15 +55,13 @@ class HierarkeyProxy:
             return {s.key: s.value for s in self._objects.all()}
 
         if self._cached_obj is None:
-            try:
-                if self._cache_key in dirty_cache_keys.get():
-                    # The settings were modified in this thread and marked as dirty. This means they have been changed
-                    # by either this object or another instance with the same cache key, however the changed objects
-                    # have not yet been committed to the SQL database. Therefore, they may not be exposed to the external
-                    # cache, or they would become visible for other threads immediately.
-                    return _read_from_db()
-            except LookupError:
-                pass
+            dirty_cache_queue = self._get_dirty_cache_queue()
+            if self._cache_key in dirty_cache_queue:
+                # The settings were modified in this thread and marked as dirty. This means they have been changed
+                # by either this object or another instance with the same cache key, however the changed objects
+                # have not yet been committed to the SQL database. Therefore, they may not be exposed to the external
+                # cache, or they would become visible for other threads immediately.
+                return _read_from_db()
             self._cached_obj = cache.get_or_set(
                 self._cache_key,
                 _read_from_db,
