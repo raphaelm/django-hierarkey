@@ -1,6 +1,6 @@
 from multiprocessing.pool import ThreadPool
 
-from django.db import transaction, connection
+from django.db import transaction
 from django.test import TransactionTestCase
 
 from .testapp.models import GlobalSettings, hierarkey
